@@ -1,0 +1,7 @@
+*.pyc
+__pycache__/*
+dev_database.db
+.DS_Store
+.mutmut-cache
+.coverage
+
