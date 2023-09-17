@@ -1,0 +1,21 @@
+= Uruchamianie
+
+== Kolejność
+Najpierw uruchamiamy serwisy z `docker compose up`, następnie zależność `00-fraud-detection`, a na koniec `00-bik-service`.
+
+== Zależności z docker compose
+Uruchom `docker compose up` w folderze `00-app/00-bik-service/docker`
+
+== 00-fraud-detection
+Uruchom następujące polecenie w katalogu `00-app/00-fraud-detection`:
+
+```bash
+FLASK_APP=smarttesting.web_app:app APP_ENV=PROD flask run --host 0.0.0.0 --port 8765
+```
+
+== 00-bik-service
+Uruchom następujące polecenie w katalogu `00-app/00-bik-service`:
+
+```bash
+FLASK_APP=smarttesting.bik.web.app:app APP_ENV=DEV flask run --host 0.0.0.0 --port 7654
+```
