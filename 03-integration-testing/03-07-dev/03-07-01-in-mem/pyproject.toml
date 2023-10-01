@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "smarttesting-python"
+version = "0.0.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.11"
+uvicorn = "*"
+requests = "*"
+factory-boy = "*"
+injector = "*"
+pydantic = "*"
+fastapi = "*"
+wiremock = "*"
+sqlalchemy = "*"
+docker = "*"
+psycopg2-binary = "*"
+celery = "*"
+marshmallow-dataclass = "*"
+marshmallow-enum = "*"
+kombu = "*"
+flask = "*"
+flask-injector = "*"
+flask-expects-json = "*"
+pytest-docker-compose = "*"
+pymongo = "*"
+typing-inspect = "*"
+selenium = "*"
+selene = "*"
+pylint-forbidden-imports = "*"
+pact-python = "*"
+pytest-benchmark = "*"
+locust = "*"
+pybuilder = "*"
+invoke = "*"
+pytest-rerunfailures = "*"
+polling = "*"
+pytest-cov = "*"
+mutmut = "*"
+expects = "*"
+responses = "*"
+vcrpy = "*"
+pytest-randomly = "*"
+assertpy = "*"
+flask-admin = "*"
+prometheus-client = "*"
+prometheus-flask-exporter = "*"
+freezegun = "*"
+types-freezegun = "*"
+cached-property = "*"
+importlib-metadata = "*"
+pyyaml = "5.3.1"
+
+[tool.poetry.dev-dependencies]
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "*"
+black = "*"
+flake8 = "*"
+pylint = "*"
+isort = "*"
+pytest = "*"
+tavern = "2.2.0"
+types-requests = "*"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = "-p no:pytest-randomly"
+python_files = "test_*.py *_test.py *_tests.py"
+markers = "uses_docker wiremock"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
