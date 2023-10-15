@@ -1,0 +1,30 @@
+{
+  "id" : "de9432be-1600-4b66-8c33-935041a3a7fd",
+  "request" : {
+    "urlPath" : "/fraudCheck",
+    "method" : "POST",
+    "headers" : {
+      "Content-Type" : {
+        "equalTo" : "application/json"
+      }
+    },
+    "bodyPatterns" : [ {
+      "matchesJsonPath" : "$[?(@.['uuid'] == '89c878e3-38f7-4831-af6c-c3b4a0669022')]"
+    }, {
+      "matchesJsonPath" : "$.['person'][?(@.['name'] == 'Stefania')]"
+    }, {
+      "matchesJsonPath" : "$.['person'][?(@.['surname'] == 'Stefanowska')]"
+    }, {
+      "matchesJsonPath" : "$.['person'][?(@.['date_of_birth'] == '2020-01-01')]"
+    }, {
+      "matchesJsonPath" : "$.['person'][?(@.['gender'] == 'FEMALE')]"
+    }, {
+      "matchesJsonPath" : "$.['person'][?(@.['national_id_number'] == '1234567890')]"
+    } ]
+  },
+  "response" : {
+    "status" : 401,
+    "transformers" : [ "response-template", "spring-cloud-contract" ]
+  },
+  "uuid" : "de9432be-1600-4b66-8c33-935041a3a7fd"
+}
