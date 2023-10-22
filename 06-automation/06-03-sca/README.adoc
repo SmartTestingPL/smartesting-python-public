@@ -1,0 +1,6 @@
+= Uruchamianie linterów
+
+```
+pylint smarttesting/ tests/
+flake8 .
+```
