@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: smarttesting
+      POSTGRES_USER: smarttesting
+      POSTGRES_PASSWORD: smarttesting
+    volumes:
+      - ./pg_dump:/docker-entrypoint-initdb.d/
+    ports:
+    - 5432:5432
+  unleash:
+    image: unleashorg/unleash-server:5.4.4
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_NAME: smarttesting
+      DATABASE_USERNAME: smarttesting
+      DATABASE_PASSWORD: smarttesting
+      DATABASE_SSL: false
+    ports:
+      - 4242:4242
+    depends_on:
+      - postgres
+  mongo:
+    image: mongo:4.0.13
+    ports:
+    - 27017:27017
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    ports:
+    - 9411:9411
+  prometheus:
+    image: prom/prometheus:v2.22.1
+    ports:
+      - 9100:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana:7.3.1
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+  fraud_verifier:
+    build: ./
+    ports:
+      - 9090:9090
+    environment:
+      FLASK_APP: fraud_verifier:app
+    volumes:
+      - ./fraud_verifier:/app/fraud_verifier
+    command: -p 9090
+    depends_on:
+      - unleash
+      - zipkin
+  loan_orders:
+    build: ./
+    ports:
+      - 9091:9091
+    environment:
+      FLASK_APP: loan_orders:app
+    volumes:
+      - ./loan_orders:/app/loan_orders
+    command: -p 9091
+    depends_on:
+      - fraud_verifier
+      - mongo
+      - zipkin

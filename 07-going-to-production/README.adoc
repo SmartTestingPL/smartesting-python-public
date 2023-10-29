@@ -1,0 +1,77 @@
+= 07 Idziemy na produkcję
+
+== Tematy omawiane w tej części:
+
+* Monitoring
+- zobacz: _Demo użycia Metryk_
+* Testy w procesie CI/CD
+* Testy regresji
+* Testowanie na produkcji
+* Wydania vs. wdrożenia
+- zobacz: _Demo Feature Toggles_
+
+== Uruchamianie aplikacji i testów
+
+W tej lekcji wykorzystamy kontenery z następującymi rzeczami:
+
+ - fraud_verifier - aplikacja do weryfikacji osób
+ - loan_orders - aplikacja do przyznawania pożyczek
+ - MongoDB - baza dokumentowa wykorzystywana przez loan_orders]
+ - Unleash - usługa do zworek funkcyjnych (feature flags), open source
+ - PostgreSQL - baza wykorzystywana przez Unleasha
+ - Zipkin - narzędzie do Distributed Tracingu
+ - Prometheus - narzędzie do zbierania metryk
+ - Grafana - narzędzie do wirtualizacji zebranych metryk przez Prometheusa (i potencjalnie z wielu innych źródeł)
+
+Aby to wszystko uruchomić, przejdź do katalogu i wywołaj docker compose:
+
+```
+cd 07-going-to-production
+docker compose up --build
+```
+
+== Demo Feature Toggles
+1) Wywołaj polecenie `curl -H 'Content-type: application/json' -X POST http://localhost:9091/orders -d '@loanOrder.json'`
+
+2) Następnie korzystając ze zwróconego IDka, zapytaj o status - na przykład: `curl -H 'Content-type: application/json' http://localhost:9091/orders/5fa6b6f2e85ca33165d459ec`. Status powien być VERIFIED.
+
+3) Mamy jeden feature toggle nazwany NewVerification `fraud_verifier.feature_toggles.features.Feature` który steruje włączeniem (lub nie) dodatkowej weryfikacji - `fraud_verifier.customer.verification.new_type_of_verification.NewTypeOfVerification`.
+
+4) Stan feature toggle'a jest kontrolowany przez Unleash, dostępnego na porcie 4242
+
+5) implementacja wykorzystuje go w środku `fraud_verifier.customer.customer_verifier.CustomerVerifier.verify` poprzez `FeatureManager`'a który wywołuje klienta z SDK Unleasha dla Pythona
+
+6) Przestaw wartość korzystając z interfejsu Unleash (login: admin, hasło: unleash4all) na środowisku development (http://127.0.0.1:4242/projects/default/features/NewVerification) i wykonaj ponownie żądanie z pierwszego punktu - zobaczysz, że zachowanie aplikacji się zmienia. UWAGA: wartość jest cache'owana po stronie fraud_verifiera, więc jeśli nie widzisz skutku od razu, po prostu ponów żądanie po chwili
+
+7) 🐍 to demonstruje zasadę działania feature toggle's i prosty sposób osiągnięcia ich w każdym projekcie. Jeżeli używasz Django, warto sprawdzić dedykowaną bibliotekę, jak Django-Waffle.
+
+== Demo Distributed Tracing z Zipkinem
+1) Mając uruchomioną aplikację i wszystkie zależności, puść kilka żądań, np. jak w punkcie 1. części o Feature Toggles
+
+2) Następnie otwórz GUI Zipkina: http://127.0.0.1:9411/zipkin/ i wciśnij przycisk `Run Query`
+
+3) Zobaczysz jak Twoje żądania przepływały przez serwisy i ile czasu spędziły w każdym z nich. W ten sposób można weryfikować jakie operacje były wykonywane w których serwisach, ile trwały, i które z nich powodowały największe opóźnienie.
+
+4) Przejdź tez na zakładkę _Dependencies_ i zobacz jak zwizualizowany został przepływ danych pomiędzy serwisami
+
+5) 🐍 W przykładzie używamy opentelemetry. Integracja z Flaskiem wymaga ręcznego przekazania instancji aplikacji do biblioteki. Zobacz `loan_orders/tracing.py`. Integracja i użycie z różnymi bibliotekami różni się w zależnośi od możliwości tych ostatnich. Np. dla pymong czy requests integracja jest automatyczna i nie wymaga przekazywania czegokolwiek. Wszystkie requesty czy zapytania do MongoDB są więc mierzone.
+
+6) cały trud dodawania _distributed tracing_ do Twojej aplikacji to odpowiednia instrumentacja
+
+
+== Demo użycia metryk
+1) Po wykonaniu kilku żądań (np. z punktu 1. części o Feature Toggles) otwórz adres http://127.0.0.1:9090/metrics by zobaczyć wystawione metryki z aplikacji `fraud-verifier` (zobacz `fraud_verifier/\_\_init\_\_.py` i `fraud_verifier.metrics`)
+
+2) Stworzyliśmy jedną własną metrykę `fraud_verifier.metrics.verify_customer_timer` do zliczania czasu spędzonego na weryfikacji i zaaplikowaliśmy ją na `fraud_verifier.customer.customer_verifier.CustomerVerifier.verify` jako dekorator
+
+3) 🐍 Pythonowy klient Prometheusa wrzuca _out-of-the-box_ parę metryk dotyczących garbage collectora. Flaskowe rozszerzenie `prometheus_flask_exporter` dodatkowo dostarcza nieco informacji o naszych żądaniach.
+
+== Demo dashboardów do metryk w Grafanie
+
+Wartości dodanych przez siebie metryk możesz agregować w Prometheusie i tworzyć dla nich dashboardy w Grafanie.
+
+1) Wykonaj trochę zapytań opisanych w sekcji "Demo Feature Toggles"
+
+2) W przeglądarce uruchom Prometheusa pod `http://127.0.0.1:9100`. Możesz przeglądać metryki i tworzyć do nich grafy
+
+3) Otwórz Grafanę w przeglądarce `http://127.0.0.1:3000/` i zaloguj się używając loginu i hasła 'admin'. Na stronie głównej znajdziesz linki do 2 przykładowych dashboardów. Jeden z nich wykorzystuje metrykę, którą dodaliśmy w kodzie. Możesz tworzyć dashboardy dla dodanych przez siebie metryk.
